@@ -1,46 +1,89 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>SSH Browser Terminal - Browser</title>
-  <link rel="stylesheet" href="/xterm/css/xterm.css" />
-  <script src="/xterm/lib/xterm.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-</head>
-<body>
-  <div style="margin: 20px; text-align: center;">
-    <h1>SSH Terminal - Browser</h1>
-    <input type="text" id="host" placeholder="Host" required>
-    <input type="number" id="port" placeholder="Port" value="22" disabled>
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button onclick="connect()">connect</button>
-  </div>
-  <div id="terminal"></div>
-  <script>
-    const term = new Terminal();
-    term.open(document.getElementById('terminal'));
-    const socket = io();
+  <head>
+    <title>SSH Browser Terminal - Browser</title>
+    <link rel="stylesheet" href="/xterm/css/xterm.css" />
+    <script src="/xterm/lib/xterm.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      #system-stats {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+      }
 
-    term.onData((data) => {
-      socket.emit('data', data);
-    });
+      .chart-container {
+        width: 22%;
+        margin: 10px;
+      }
 
-    socket.on('output', (data) => {
-      term.write(data);
-    });
+      canvas {
+        width: 100% !important;
+        height: 350px !important;
+      }
+      
+      #cpu, #memory, #swap, #disk {
+        margin-block: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="margin: 20px; text-align: center;">
+      <h1>SSH Terminal - Browser</h1>
+      <input type="text" id="host" placeholder="Host" required>
+      <input type="number" id="port" placeholder="Port" value="22" disabled>
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button onclick="connect()">connect</button>
+    </div>
+    
+    <div id="terminal"></div>
 
-    socket.on('status', (status) => {
-      console.log(status);
-    });
+    <div id="system-stats">
+      <div class="chart-container" id="cpu-chart-container">
+        <h4>CPU Usage</h4>
+        <div id="cpu"></div>
+        <canvas id="cpuChart"></canvas>
+      </div>
 
-    function connect(){
-      const host = document.getElementById('host').value;
-      const port = parseInt(document.getElementById('port').value, 10);
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-      term.clear();
-      socket.emit('connectSSH', { host, port, username, password });
-    }
-  </script>
-</body>
+      <div class="chart-container" id="memory-chart-container">
+        <h4>Memory Usage</h4>
+        <div id="memory"></div>
+        <canvas id="memoryChart"></canvas>
+      </div>
+      
+      <div class="chart-container" id="swap-chart-container">
+        <h4>Swap Usage</h4>
+        <div id="swap"></div>
+        <canvas id="swapChart"></canvas>
+      </div>
+
+      <div class="chart-container" id="disk-chart-container">
+        <h4>Disk Usage</h4>
+        <div id="disk"></div>
+        <canvas id="diskChart"></canvas>
+      </div>
+    </div>
+
+    <script src="./core.js"></script>
+    
+    <script>
+      document.getElementById('host').addEventListener('keydown', handleEnterKey);
+      document.getElementById('username').addEventListener('keydown', handleEnterKey);
+      document.getElementById('password').addEventListener('keydown', handleEnterKey);
+
+      function handleEnterKey(event) {
+        if (event.key === 'Enter') {
+          const host = document.getElementById('host').value;
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+
+          if (host && username && password) {
+            connect();
+          }
+        }
+      }
+    </script>
+  </body>
 </html>
